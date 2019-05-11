@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func main() {
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/save", handleSave)
+	http.HandleFunc("/upload", handleUpload)
 
 	http.Handle("/static/",
 		http.StripPrefix("/static/",
@@ -49,4 +53,50 @@ func handleSave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "Only accept POST requet", http.StatusBadRequest)
+}
+
+func handleUpload(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		tmpl := template.Must(template.ParseFiles("upload.html"))
+		if err := tmpl.Execute(w, nil); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if r.Method == "POST" {
+		basePath, _ := os.Getwd()
+		reader, err := r.MultipartReader()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		for {
+			part, err := reader.NextPart()
+			if err == io.EOF {
+				break
+			}
+
+			fileLocation := filepath.Join(basePath, "files", part.FileName())
+			dst, err := os.Create(fileLocation)
+
+			if dst != nil {
+				defer dst.Close()
+			}
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			if _, err := io.Copy(dst, part); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		w.Write([]byte("all files uploaded"))
+		return
+	}
 }
