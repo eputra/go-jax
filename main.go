@@ -39,14 +39,11 @@ func handleSave(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		jsonInBytes, err := json.Marshal(payload)
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(payload)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonInBytes)
 
 		return
 	}
