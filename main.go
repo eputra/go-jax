@@ -39,12 +39,15 @@ func handleSave(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		message := fmt.Sprintf(
-			"hello, my name is %s. I'm %d year old %s",
-			payload.Name,
-			payload.Age,
-			payload.Gender)
-		w.Write([]byte(message))
+		jsonInBytes, err := json.Marshal(payload)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonInBytes)
+
 		return
 	}
 

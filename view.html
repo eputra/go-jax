@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>JSON Payloa</title>
+        <title>JSON Payload</title>
         <script src="static/jquery-3.4.1.min.js"></script>
         <script>
             $(function () {
@@ -20,7 +20,10 @@
                         data: payload,
                         contentType: 'application/json',
                     }).then(function (res) {
-                        $("message").text(res);
+                        console.log(res);
+                        console.log(res.name);
+                        var message = "Hello, my name is " + res.name + ". I'm " + res.age + " year old " + res.gender;
+                        $(".message").text(message);
                     }).catch(function (a) {
                         alert("ERROR: " + a.responseText);
                     });
